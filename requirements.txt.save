@@ -1,0 +1,10 @@
+pyserial
+pandas
+numpy
+matplotlib
+scikit-learn
+tensorflow
+tqdm
+joblib
+jupyter source /home/dage/PlatformIO/Projects/.venv/bin/activate
+
