@@ -3,7 +3,10 @@
 venv/
 tfenv/
 training/tfenv/
+
 __pycache__/
+*/__pycache__/
+
 *.pyc
 
 # PlatformIO
@@ -12,6 +15,6 @@ __pycache__/
 # VS Code
 .vscode/
 
-# OS
+# macOS / Windows
 .DS_Store
 Thumbs.db.pio
