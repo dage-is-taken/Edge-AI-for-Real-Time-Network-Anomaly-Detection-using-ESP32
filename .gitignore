@@ -1,11 +1,10 @@
 # Python
 .venv/
+venv/
+tfenv/
+training/tfenv/
 __pycache__/
 *.pyc
-
-# TensorFlow
-models/*.keras
-models/*.tflite
 
 # PlatformIO
 .pio/
@@ -13,16 +12,6 @@ models/*.tflite
 # VS Code
 .vscode/
 
-# Environment
-.env
-.env.*
-
 # OS
 .DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Temporary
-*.tmp
+Thumbs.db.pio

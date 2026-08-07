@@ -1,0 +1,9 @@
+pyserial
+pandas
+numpy
+matplotlib
+scikit-learn
+tensorflow
+tqdm
+joblib
+jupyter
