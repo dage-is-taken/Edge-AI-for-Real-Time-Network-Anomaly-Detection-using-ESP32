@@ -18,15 +18,23 @@
 #include "model_data.h"
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
+#include <PubSubClient.h>
+
 
 
 //==============================
 // WiFi Configuration
 //============================== 
-const float ANOMALY_THRESHOLD = 0.5967469f;
-
+const float ANOMALY_THRESHOLD = 0.6340072f;
 const char* WIFI_SSID = "Ooredoo 5G_B4901C";
 const char* WIFI_PASSWORD = "2KN28K23PZ";
+const char* MQTT_BROKER = "192.168.1.159";  
+const int MQTT_PORT = 1883;
+const char* MQTT_TOPIC = "anomaly_detector/data";
+const char* MQTT_CLIENT_ID = "esp32_anomaly_detector";
+
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
 
 //==============================
 // Local HTTP Server
@@ -46,26 +54,27 @@ const int PING_COUNT = 10;
 // Feature Normalization
 //==============================
 
+
 const float FEATURE_MEAN[8] = {
-    4.36659187f,
-    2.47994390f,
+    3.68482725f,
+    2.13458045f,
     0.00000000f,
-    2.20614306f,
-   -34.81206171f,
-    65.18793829f,
-    0.45796683f,
-    2.20614306f
+    3.29817374f,
+  -39.06021718f,
+   60.93978282f,
+    0.47526844f,
+    3.29817374f
 };
 
 const float FEATURE_STD[8] = {
-    5.54026640f,
-    7.56007513f,
+    2.52624235f,
+    3.10005323f,
     1.00000000f,
-    0.19860133f,
-    5.35143822f,
-    5.35143822f,
-    0.20969559f,
-    0.19860133f
+    0.38818804f,
+   15.13817004f,
+   15.13817004f,
+    0.26117170f,
+    0.38818804f
 };
 
 //==============================
@@ -86,6 +95,21 @@ struct PingStats {
   float jitter;
   float lossPercent;
 };
+void connectMQTT() {
+    if (mqttClient.connected()) return;
+
+    Serial.print("Connecting to MQTT broker...");
+
+    if (mqttClient.connect(MQTT_CLIENT_ID)) {
+        Serial.println(" connected!");
+    } else {
+        Serial.print(" failed, rc=");
+        Serial.println(mqttClient.state());
+        // Don't block -- just skip publishing this cycle, retry next loop
+    }
+}
+
+
 void setup() {
 
   delay(1000);
@@ -132,6 +156,8 @@ Serial.println(WiFi.channel());
   }
 
   Serial.println("WiFi Connected!");
+  mqttClient.setServer(MQTT_BROKER, MQTT_PORT);
+
 
   Serial.print("ESP32 IP Address : ");
   Serial.println(WiFi.localIP());
@@ -437,7 +463,7 @@ void loop() {
   float network_stability = pingStats.jitter / (pingStats.avgLatency + 0.000001f);
   float packet_efficiency = throughput * (1.0f - pingStats.lossPercent / 100.0f);
 
-featureWindow[windowIndex][0] = pingStats.avgLatency;
+  featureWindow[windowIndex][0] = pingStats.avgLatency;
 featureWindow[windowIndex][1] = pingStats.jitter;
 featureWindow[windowIndex][2] = pingStats.lossPercent;
 featureWindow[windowIndex][3] = throughput;
@@ -486,8 +512,36 @@ else
 // Machine-readable output for Python collector
 //----------------------------------------------------
 
+
 Serial.print("DATA,");
 unsigned long timestamp = millis();
+connectMQTT();
+
+if (mqttClient.connected()) {
+
+    char payload[256];
+
+    snprintf(payload, sizeof(payload),
+        "{\"timestamp\":%lu,\"latency_ms\":%.2f,\"jitter_ms\":%.2f,"
+        "\"loss_percent\":%.2f,\"throughput_mbps\":%.2f,\"rssi_dbm\":%d,"
+        "\"reconstruction_error\":%.6f,\"threshold\":%.7f,\"anomaly\":%s}",
+        timestamp,
+        pingStats.avgLatency,
+        pingStats.jitter,
+        pingStats.lossPercent,
+        throughput,
+        rssi,
+        score,
+        ANOMALY_THRESHOLD,
+        (score > ANOMALY_THRESHOLD) ? "true" : "false"
+    );
+
+    mqttClient.publish(MQTT_TOPIC, payload);
+    mqttClient.loop();  // needed to maintain the MQTT connection
+
+    Serial.print("MQTT published: ");
+    Serial.println(payload);
+}
 
 Serial.print(timestamp);
 Serial.print(",");
