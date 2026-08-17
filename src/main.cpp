@@ -26,9 +26,9 @@
 // WiFi Configuration
 //============================== 
 const float ANOMALY_THRESHOLD = 0.6340072f;
-const char* WIFI_SSID = "Ooredoo 5G_B4901C";
-const char* WIFI_PASSWORD = "2KN28K23PZ";
-const char* MQTT_BROKER = "192.168.1.159";  
+const char* WIFI_SSID = "Ooredoo";
+const char* WIFI_PASSWORD = "randompassword";
+const char* MQTT_BROKER = "***.***.*.***";  
 const int MQTT_PORT = 1883;
 const char* MQTT_TOPIC = "anomaly_detector/data";
 const char* MQTT_CLIENT_ID = "esp32_anomaly_detector";
@@ -41,7 +41,7 @@ PubSubClient mqttClient(espClient);
 //==============================
 
 // Your PC IP address
-IPAddress speedServer(192,168,1,159);
+IPAddress speedServer(***,***,*,***);
 const int SPEEDTEST_PORT = 8000;
 const char* SPEEDTEST_PATH = "/testfile.bin";
 //==============================
